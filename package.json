@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/emurdnt/tinyapp/issues"
   },
-  "homepage": "https://github.com/emurdnt/tinyapp#readme"
+  "homepage": "https://github.com/emurdnt/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
