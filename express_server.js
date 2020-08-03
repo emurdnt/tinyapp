@@ -28,6 +28,10 @@ app.get("/", (req, res) => {
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
+//redirect the shortened url to the long url
+app.get("/u/:shortURL", (req, res) => {
+  res.redirect(urlDatabase[req.params.shortURL]);  
+});
 
 //new urls
 app.get("/urls/new", (req, res) => {
