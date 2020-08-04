@@ -55,6 +55,13 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const shortURL = req.params.shortURL;
+  delete urlDatabase[shortURL];
+  res.redirect('/urls');
+  //send a more userfriendly message here when it's deleted
+});
+
 app.post("/urls", (req, res) => {
   //generate string;
   let shortURL = generateRandomString();
@@ -66,6 +73,7 @@ app.post("/urls", (req, res) => {
   res.redirect('/urls/' + shortURL);  
  
 });
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
