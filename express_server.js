@@ -8,7 +8,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 function generateRandomString() {
   let result = '';
   let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  for ( var i = 0; i <= 6; i++ ) {
+  for ( var i = 1; i <= 6; i++ ) {
      result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;
@@ -39,8 +39,10 @@ app.get("/urls/new", (req, res) => {
 });
 //shortened url
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL:urlDatabase[req.params.shortURL]};
+  let templateVars = {shortURL: req.params.shortURL, longURL:urlDatabase[req.params.shortURL]};
+  console.log(templateVars.longURL);
   res.render("urls_show", templateVars);
+  
 });
 
 //show all the urls
@@ -60,6 +62,7 @@ app.post("/urls", (req, res) => {
   //maybe do checks here later
   urlDatabase[shortURL] = req.body.longURL;
   //redirect
+  //check if the url has value
   res.redirect('/urls/' + shortURL);  
  
 });
