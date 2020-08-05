@@ -35,6 +35,16 @@ function generateRandomString() {
   }
   return result;
 }
+function findUserID(email){
+  let userId = "";
+  for(let user in users){
+    let userDetails = users[user];
+    if(userDetails['email'] === email){
+       userId = userDetails['id'];
+    }
+  }
+  return userId;
+}
 function doesUserEmailExist(email){
   let userExists = false;
   for(let user in users){
@@ -44,6 +54,17 @@ function doesUserEmailExist(email){
     }
   }
   return userExists;
+}
+
+function doesPasswordMatch(password){
+  let match = false;
+  for(let user in users){
+    let userDetails = users[user];
+    if(userDetails['password'] === password){
+      match = true; 
+    }
+  }
+  return match;
 }
 function generateUserId(){
   //got this from stackOverflow
@@ -71,7 +92,6 @@ app.get("/u/:shortURL", (req, res) => {
 //new urls
 app.get("/urls/new", (req, res) => {
   let templateVars = {
-    username: req.cookies["username"],
     user: users[req.cookies["user_id"]]
   };
   console.log(templateVars);
@@ -83,7 +103,6 @@ app.get("/urls/:shortURL", (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL, 
     longURL:urlDatabase[req.params.shortURL],
-    username: req.cookies["username"],
     user: users[req.cookies["user_id"]]
   };
 
@@ -91,10 +110,18 @@ app.get("/urls/:shortURL", (req, res) => {
   
 });
 
-//show all the urls
+//login
+app.get("/login", (req, res) => {
+  let templateVars = {
+    user: users[req.cookies["user_id"]]
+  };
+  res.render("urls_login", templateVars);
+});
+
+
+//resgister
 app.get("/register", (req, res) => {
   let templateVars = {
-    username: req.cookies["username"],
     user: users[req.cookies["user_id"]]
   };
   res.render("urls_register", templateVars);
@@ -102,9 +129,9 @@ app.get("/register", (req, res) => {
 
 //show all the urls
 app.get("/urls", (req, res) => {
+  //check if they're logged in here or redirect to 
   let templateVars = { 
     urls: urlDatabase,
-    username: req.cookies["username"],
     user: users[req.cookies["user_id"]]
    };
   res.render("urls_index", templateVars);
@@ -129,10 +156,26 @@ app.post("/login", (req, res) => {
   //var value = res.body.username;
   //grab the vaalue in the input
   //assign it to a cookie
-  const user = req.body.username;
-  res.cookie('username',user);
-  res.redirect('/urls');  
- 
+  const email = req.body.email;
+  let userFound = doesUserEmailExist(email);
+  let passMatch = doesPasswordMatch(req.body.password);
+
+  if(!userFound){
+    console.log("User not found");
+    response.status(403);
+    res.redirect('/login');
+  } else if (userFound){
+    console.log("User email found");
+    if(passMatch){
+      console.log("success!");
+      res.cookie('user_id',findUserID(email));
+      res.redirect('/urls');  
+    } else {
+      console.log("pass not match");
+      res.redirect('/login');  
+    }
+  }
+
 });
 
 app.post("/logout", (req, res) => {
@@ -156,6 +199,8 @@ app.post("/register", (req, res) => {
     if(!userExists){
       console.log("adding to server a user");
       const newUserId = generateUserId();
+      //hash the password
+      //encrypt the email and user id
       users[newUserId] = {
         'id': newUserId,
         'email': req.body.email,
