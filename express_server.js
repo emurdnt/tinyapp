@@ -2,7 +2,15 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
+const cookieParser = require('cookie-parser');
+const { response } = require("express");
 
+const urlDatabase = {
+  "b2xVn2": "http://www.lighthouselabs.ca",
+  "9sm5xK": "http://www.google.com"
+};
+
+app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
 
 function generateRandomString() {
@@ -14,10 +22,6 @@ function generateRandomString() {
   return result;
 }
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
 
 app.set("view engine", "ejs") ;
 
@@ -35,24 +39,29 @@ app.get("/u/:shortURL", (req, res) => {
 
 //new urls
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  let templateVars = {
+    username: req.cookies["username"],
+  };
+  res.render("urls_new",templateVars);
 });
 //shortened url
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = {shortURL: req.params.shortURL, longURL:urlDatabase[req.params.shortURL]};
-  console.log(templateVars.longURL);
+  let templateVars = {
+    shortURL: req.params.shortURL, 
+    longURL:urlDatabase[req.params.shortURL],
+    username: req.cookies["username"],
+  };
   res.render("urls_show", templateVars);
   
 });
 
 //show all the urls
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase };
+  let templateVars = { 
+    urls: urlDatabase,
+    username: req.cookies["username"],
+   };
   res.render("urls_index", templateVars);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -60,6 +69,32 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[shortURL];
   res.redirect('/urls');
   //send a more userfriendly message here when it's deleted
+});
+
+
+
+app.post("/urls/:id", (req, res) => {
+  const shortURL = req.params.id;
+  urlDatabase[shortURL] = req.body.longURL;
+  res.redirect('/urls');
+ 
+});
+
+
+app.post("/login", (req, res) => {
+  //var value = res.body.username;
+  //grab the vaalue in the input
+  //assign it to a cookie
+  const user = req.body.username;
+  res.cookie('username',user);
+  res.redirect('/urls');  
+ 
+});
+
+app.post("/logout", (req, res) => {
+  res.clearCookie('username');
+  res.redirect('/urls');  
+ 
 });
 
 app.post("/urls", (req, res) => {
