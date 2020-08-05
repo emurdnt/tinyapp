@@ -10,6 +10,20 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "test"
+  }
+}
+
+
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -21,7 +35,24 @@ function generateRandomString() {
   }
   return result;
 }
+function doesUserEmailExist(email){
+  let userExists = false;
+  for(let user in users){
+    let userDetails = users[user];
+    if(userDetails['email'] === email){
+      userExists = true; 
+    }
+  }
+  return userExists;
+}
+function generateUserId(){
+  //got this from stackOverflow
+  //https://stackoverflow.com/questions/4317456/getting-the-last-item-in-a-javascript-object
+  const lastUser = users[Object.keys(users)[Object.keys(users).length - 1]]['id'];
+  const num = Number(lastUser.substr(4,1)) + 1; 
 
+ return 'user'+num+'RandomID';
+}
 
 app.set("view engine", "ejs") ;
 
@@ -41,18 +72,32 @@ app.get("/u/:shortURL", (req, res) => {
 app.get("/urls/new", (req, res) => {
   let templateVars = {
     username: req.cookies["username"],
+    user: users[req.cookies["user_id"]]
   };
+  console.log(templateVars);
   res.render("urls_new",templateVars);
 });
+
 //shortened url
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL, 
     longURL:urlDatabase[req.params.shortURL],
     username: req.cookies["username"],
+    user: users[req.cookies["user_id"]]
   };
+
   res.render("urls_show", templateVars);
   
+});
+
+//show all the urls
+app.get("/register", (req, res) => {
+  let templateVars = {
+    username: req.cookies["username"],
+    user: users[req.cookies["user_id"]]
+  };
+  res.render("urls_register", templateVars);
 });
 
 //show all the urls
@@ -60,6 +105,7 @@ app.get("/urls", (req, res) => {
   let templateVars = { 
     urls: urlDatabase,
     username: req.cookies["username"],
+    user: users[req.cookies["user_id"]]
    };
   res.render("urls_index", templateVars);
 });
@@ -72,12 +118,10 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 
-
 app.post("/urls/:id", (req, res) => {
   const shortURL = req.params.id;
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect('/urls');
- 
 });
 
 
@@ -92,9 +136,36 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('username');
-  res.redirect('/urls');  
- 
+  res.clearCookie('user_id');
+  res.redirect('/urls'); 
+});
+
+app.post("/register", (req, res) => {
+  //check if it exists
+  //check is email and password exists
+  let userExists = doesUserEmailExist(req.body.email);
+  if(req.body.email === '' || req.body.password === ''){
+    //add message in the front end
+    res.status(404);
+    res.redirect('/register');
+  }else if(userExists){
+    res.status(404);
+    //maybe redirect to login and then show message
+    res.redirect('/register');
+  } else {
+    if(!userExists){
+      console.log("adding to server a user");
+      const newUserId = generateUserId();
+      users[newUserId] = {
+        'id': newUserId,
+        'email': req.body.email,
+        'password': req.body.password
+      }
+      res.cookie('user_id',newUserId);
+      res.redirect('/urls/');
+    }
+  }
+  
 });
 
 app.post("/urls", (req, res) => {
