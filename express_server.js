@@ -1,9 +1,11 @@
 const express = require("express");
 const app = express();
+const bcrypt = require('bcrypt');
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
-const { response } = require("express");
+//const { response } = require("express");
+
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
@@ -15,11 +17,13 @@ const users = {
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
+    //date: "31/10/2019",
     password: "purple-monkey-dinosaur"
   },
  "user2RandomID": {
     id: "user2RandomID", 
     email: "user2@example.com", 
+    //date: "31/10/2019",
     password: "test"
   }
 }
@@ -81,7 +85,7 @@ function doesPasswordMatch(password){
   let match = false;
   for(let user in users){
     let userDetails = users[user];
-    if(userDetails['password'] === password){
+    if(bcrypt.compareSync(password, userDetails['password'])){
       match = true; 
     }
   }
@@ -153,7 +157,7 @@ app.get("/urls", (req, res) => {
   //check if they're logged in here or redirect to 
   
   let shortenedLinks = urlsForUser(req.cookies["user_id"]);
-  console.log(shortenedLinks);
+  // console.log(users);
   let templateVars = { 
     urls: shortenedLinks,
     user: users[req.cookies["user_id"]]
@@ -188,7 +192,7 @@ app.post("/login", (req, res) => {
 
   if(!userFound){
     console.log("User not found");
-    response.status(403);
+    res.status(403);
     res.redirect('/login');
   } else if (userFound){
     console.log("User email found");
@@ -225,12 +229,15 @@ app.post("/register", (req, res) => {
     if(!userExists){
       console.log("adding to server a user");
       const newUserId = generateUserId();
+
+      const password = req.body.password;
+      const hashedPassword = bcrypt.hashSync(password, 10);
       //hash the password
       //encrypt the email and user id
       users[newUserId] = {
         'id': newUserId,
         'email': req.body.email,
-        'password': req.body.password
+        'password': hashedPassword
       }
       res.cookie('user_id',newUserId);
       res.redirect('/urls/');
