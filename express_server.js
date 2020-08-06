@@ -59,7 +59,6 @@ app.get("/urls.json", (req, res) => {
 */ 
 app.get("/u/:id", (req, res) => {
   const shortened = urlDatabase[req.params.id];
-  // console.log(req.params);
   if(shortened){
     res.redirect(urlDatabase[req.params.id]['longURL']);  
   } else {
@@ -82,7 +81,6 @@ app.get("/urls/new", (req, res) => {
       user: loggedUser,
       error:""
     };
-    //console.log(templateVars);
     res.render("urls_new", templateVars);
   } else {
     res.redirect("/login");
@@ -94,11 +92,7 @@ app.get("/urls/new", (req, res) => {
   Render the short url page but prevent the user that are not logged in and does not own the url.
 */ 
 app.get("/urls/:id", (req, res) => {
-
-  console.log(urlDatabase[req.params]);
-
   if(urlDatabase[req.params.id]){
-
     let templateVars = {
       shortURL: req.params.id, 
       longURL: urlDatabase[req.params.id]['longURL'],
@@ -106,17 +100,13 @@ app.get("/urls/:id", (req, res) => {
       user: users[req.session.user_id],
       error:""
     };
-   
     res.render("urls_show", templateVars);
   } else {
     let templateVars = {
      error: "URL ID does not exist",
      user: users[req.session.user_id]
     };
-
     res.render("urls_show", templateVars);
-    //return error message here
-    //maybe initialize template vars with an error message instead & check for errors
   }
 });
 
@@ -124,7 +114,6 @@ app.get("/urls/:id", (req, res) => {
   Render the login page.
 */ 
 app.get("/login", (req, res) => {
-  
   const loggedUser = users[req.session.user_id];
   if(loggedUser){
     res.redirect("/urls");
@@ -160,13 +149,10 @@ app.get("/register", (req, res) => {
 app.get("/urls", (req, res) => {
   //check if they're logged in here or redirect to 
   let shortenedLinks = urlsForUser(req.session.user_id,urlDatabase);
-  // console.log(users);
   let templateVars = {
     urls: shortenedLinks,
     user: users[req.session.user_id]
   };
-
-  console.log(templateVars);
   res.render("urls_index", templateVars);
 });
 
@@ -178,8 +164,6 @@ app.post("/urls/:id/delete", (req, res) => {
 
   if(loggedUser){
     const shortURL = req.params.id;
-    console.log(shortURL, req.params);
-    console.log(urlDatabase);
     delete urlDatabase[shortURL];
     res.redirect('/urls');
     //send a more userfriendly message here when it's deleted
@@ -208,26 +192,18 @@ app.post("/urls/:id", (req, res) => {
   Login
 */ 
 app.post("/login", (req, res) => {
-  //var value = res.body.username;
-  //grab the vaalue in the input
-  //assign it to a cookie
-  //check session cookies
   const {email, password} = req.body;
   let userFound = doesUserEmailExist(email, users);
   let passMatch = doesPasswordMatch(password, users);
 
   if (!userFound) {
-    console.log("User not found");
     res.status(403);
     res.redirect('/login');
   } else if (userFound) {
-    console.log("User email found");
     if (passMatch) {
-      console.log("success!");
       req.session.user_id = getUserByEmail(email, users);
       res.redirect('/urls');
     } else {
-      console.log("pass not match");
       res.redirect('/login');
     }
   }
@@ -238,7 +214,6 @@ app.post("/login", (req, res) => {
   Logout and clear the cookie session.
 */ 
 app.post("/logout", (req, res) => {
-  console.log("hello");
   req.session.user_id = null;
   res.redirect('/login');
 });
@@ -247,27 +222,21 @@ app.post("/logout", (req, res) => {
   Registering a new user.
 */ 
 app.post("/register", (req, res) => {
-  //check if it exists
-  //check is email and password exists
   const {email, password} = req.body;
   let userExists = doesUserEmailExist(req.body.email, users);
   if (email === '' || password === '') {
-    //add message in the front end
     res.status(404);
     res.redirect('/register');
   } else if (userExists) {
     res.status(404);
-    //maybe redirect to login and then show message
     res.redirect('/register');
   } else {
     if (!userExists) {
-      console.log("adding to server a user");
       const newUserId = generateUserId(users);
 
       const inputPassword = password;
       const hashedPassword = bcrypt.hashSync(inputPassword, 10);
-      //hash the password
-      //encrypt the email and user id
+
       users[newUserId] = {
         'id': newUserId,
         'email': email,
@@ -286,18 +255,11 @@ app.post("/urls", (req, res) => {
   const loggedUser = users[req.session.user_id];
 
   if(loggedUser){
-    //generate string;
     let shortURL = generateRandomString();
-  //add to object
-  //maybe do checks here later
     urlDatabase[shortURL] = {
       'longURL': req.body.longURL,
       'userID': users[req.session.user_id]['id']
     };
-
-  // console.log(urlDatabase);
-  //redirect
-  //check if the url has value
     res.redirect('/urls/' + shortURL);  
   } else {
     res.redirect("/login");
