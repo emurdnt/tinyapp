@@ -23,7 +23,6 @@ const generateUserId = (database) => {
   //got this from stackOverflow
   //https://stackoverflow.com/questions/4317456/getting-the-last-item-in-a-javascript-object
   const lastUser = database[Object.keys(database)[Object.keys(database).length - 1]]['id'];
-  console.log(lastUser);
   const num = Number(lastUser.substr(4,1)) + 1;
 
   return 'user' + num + 'RandomID';
@@ -42,7 +41,8 @@ const urlsForUser = (id, database) => {
     if (urlDetails['userID'] === id) {
       details = {
         'shortURL': entry,
-        'longURL': urlDetails['longURL']
+        'longURL': urlDetails['longURL'],
+        'date': urlDetails['date']
       };
       urls.push(details);
     }
@@ -98,8 +98,22 @@ const doesPasswordMatch = (password, database) => {
   return match;
 };
 
+/*
+Get the current date for when the link is created in the format mm/dd/yyyy.
+https://stackoverflow.com/questions/1531093/how-do-i-get-the-current-date-in-javascript
+*/
+const getCurrentDate = () =>{
+  let today = new Date();
+  let dd = String(today.getDate()).padStart(2, '0');
+  let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+  let yyyy = today.getFullYear();
+
+  return today = mm + '/' + dd + '/' + yyyy;
+}
+
 
 module.exports = {
+  getCurrentDate,
   generateRandomString,
   urlsForUser,
   getUserByEmail,
