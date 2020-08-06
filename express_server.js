@@ -3,7 +3,8 @@ const app = express();
 const bcrypt = require('bcrypt');
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser');
+//const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 //const { response } = require("express");
 
 
@@ -29,9 +30,12 @@ const users = {
 }
 
 
-app.use(cookieParser());
+//app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
-
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', "key2"]
+}));
 
 
 function generateRandomString() {
@@ -117,7 +121,7 @@ app.get("/u/:shortURL", (req, res) => {
 //new urls
 app.get("/urls/new", (req, res) => {
   let templateVars = {
-    user: users[req.cookies["user_id"]]
+    user: users[req.session.user_id]
   };
   console.log(templateVars);
   res.render("urls_new",templateVars);
@@ -129,7 +133,7 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: req.params.shortURL, 
     longURL:urlDatabase[req.params.shortURL]['longURL'],
     id:urlDatabase[req.params.shortURL]['userID'],
-    user: users[req.cookies["user_id"]]
+    user: users[req.session.user_id]
   };
   console.log(urlDatabase, templateVars);
   res.render("urls_show", templateVars);
@@ -138,7 +142,7 @@ app.get("/urls/:shortURL", (req, res) => {
 //login
 app.get("/login", (req, res) => {
   let templateVars = {
-    user: users[req.cookies["user_id"]]
+    user: users[req.session.user_id]
   };
   res.render("urls_login", templateVars);
 });
@@ -147,7 +151,7 @@ app.get("/login", (req, res) => {
 //resgister
 app.get("/register", (req, res) => {
   let templateVars = {
-    user: users[req.cookies["user_id"]]
+    user: users[req.session.user_id]
   };
   res.render("urls_register", templateVars);
 });
@@ -156,12 +160,14 @@ app.get("/register", (req, res) => {
 app.get("/urls", (req, res) => {
   //check if they're logged in here or redirect to 
   
-  let shortenedLinks = urlsForUser(req.cookies["user_id"]);
+  let shortenedLinks = urlsForUser(req.session.user_id);
   // console.log(users);
   let templateVars = { 
     urls: shortenedLinks,
-    user: users[req.cookies["user_id"]]
+    user: users[req.session.user_id]
    };
+
+   console.log(templateVars);
   res.render("urls_index", templateVars);
 });
 
@@ -198,7 +204,7 @@ app.post("/login", (req, res) => {
     console.log("User email found");
     if(passMatch){
       console.log("success!");
-      res.cookie('user_id',findUserID(email));
+      req.session.user_id = findUserID(email);
       res.redirect('/urls');  
     } else {
       console.log("pass not match");
@@ -209,8 +215,8 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
-  res.redirect('/urls'); 
+  req.session.user_id = null;
+  res.redirect('/login');
 });
 
 app.post("/register", (req, res) => {
@@ -239,7 +245,7 @@ app.post("/register", (req, res) => {
         'email': req.body.email,
         'password': hashedPassword
       }
-      res.cookie('user_id',newUserId);
+      req.session.user_id = newUserId;
       res.redirect('/urls/');
     }
   }
@@ -253,7 +259,7 @@ app.post("/urls", (req, res) => {
   //maybe do checks here later
   urlDatabase[shortURL] ={
     'longURL':req.body.longURL,
-    'userID': users[req.cookies["user_id"]]['id']
+    'userID': users[req.session.user_id]['id']
   } 
 
   // console.log(urlDatabase);
