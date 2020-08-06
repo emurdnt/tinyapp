@@ -9,49 +9,48 @@
 <body>
   <%- include('partials/_header') %>
 
-  <% if (!user) { %>
-    <div class="card text-center" style="width:70%; margin:170px auto;">
-      <div class="card-header">Error</div>
-      <div class="card-body">
-        <h3><a href="/register">Register</a> or <a href="/login">Login</a> first.</h3>
-        </form>
-      </div>
-    </div>
-    <% } else if (user['id'] !== id) {%>
-      <div class="card text-center" style="width:70%; margin:170px auto;">
-        <div class="card-header">Error</div>
-        <div class="card-body">
-          <h3>Unauthorized to view this shortened URL.</h3>
-          </form>
-        </div>
-      </div>
-    <%  } else { %>
-      <div class="card text-center">
-        <div class="card-header"></div>
-        <div class="card-body">
-          <% if (longURL === undefined) { %>
-            <h5 class="card-title">URL has not been shortened yet.</h5>
-         <% } else { %>
-            <h5 class="card-title">TinyURL for: <%= longURL %></h5>
-            <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
-         <%  } %>
-        </div>
-      </div>
-        <!-- <button type="button" class="btn btn-success"><a href="/urls/new" style="color:inherit">Shorten Links</a></button> -->
-      <div class="card-footer text-muted text-center">
-        <div class="card-body">
+  <% if (!error) { %>
+    <% if (user['id'] !== id) {%>
+        <div class="card text-center" style="width:70%; margin:170px auto;">
+          <div class="card-header">Error</div>
           <div class="card-body">
-            <form action="/urls/<%= shortURL %>" method="POST">
-              <div class="form-group mb-2">
-                <label for="longURL">Update URL:</label>
-                <input class="form-control" type="text" name="longURL" placeholder="http://" style="width: 600px; margin:10px auto;">
-                <button type="submit" class="btn btn-primary">Edit URL</button>
-              </div>
+            <h3>Unauthorized to view this shortened URL.</h3>
             </form>
+          </div>
+        </div>
+      <%  } else { %>
+        <div class="card text-center">
+          <div class="card-header"></div>
+          <div class="card-body">
+            <% if (longURL === undefined) { %>
+              <h5 class="card-title">URL has not been shortened yet.</h5>
+           <% } else { %>
+              <h5 class="card-title">TinyURL for: <%= longURL %></h5>
+              <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
+           <%  } %>
+          </div>
+        </div>
+          <!-- <button type="button" class="btn btn-success"><a href="/urls/new" style="color:inherit">Shorten Links</a></button> -->
+        <div class="card-footer text-muted text-center">
+          <div class="card-body">
+            <div class="card-body">
+              <form action="/urls/<%= shortURL %>" method="POST">
+                <div class="form-group mb-2">
+                  <label for="longURL">Update URL:</label>
+                  <input class="form-control" type="text" name="longURL" placeholder="http://" style="width: 600px; margin:10px auto;">
+                  <button type="submit" class="btn btn-primary">Edit URL</button>
+                </div>
+              </form>
+          </div>
         </div>
       </div>
+      <%  } %>
+  <%  } else { %>
+    <div class="alert alert-warning" role="alert">
+      <p><%= error %></p>
     </div>
-    <%  } %>
+  <%  } %>
+  
  
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>

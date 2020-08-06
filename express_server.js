@@ -58,10 +58,16 @@ app.get("/urls.json", (req, res) => {
   Redirect the short URL to the longURL
 */ 
 app.get("/u/:id", (req, res) => {
-  if(urlDatabase[req.params.shortURL]['longURL']){
-    res.redirect(urlDatabase[req.params.shortURL]['longURL']);  
+  const shortened = urlDatabase[req.params.id];
+  // console.log(req.params);
+  if(shortened){
+    res.redirect(urlDatabase[req.params.id]['longURL']);  
   } else {
-    //return error message here
+    let templateVars = {
+      user: users[req.session.user_id],
+      error: "URL does not exist"
+    };
+    res.render("urls_new", templateVars);
   }
 });
 
@@ -71,9 +77,10 @@ app.get("/u/:id", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const loggedUser = users[req.session.user_id];
 
-  if(user){
+  if(loggedUser){
     let templateVars = {
-      user: loggedUser
+      user: loggedUser,
+      error:""
     };
     //console.log(templateVars);
     res.render("urls_new", templateVars);
@@ -88,16 +95,26 @@ app.get("/urls/new", (req, res) => {
 */ 
 app.get("/urls/:id", (req, res) => {
 
-  if(urlDatabase[req.params.shortURL]['longURL']){
+  console.log(urlDatabase[req.params]);
+
+  if(urlDatabase[req.params.id]){
+
     let templateVars = {
-      shortURL: req.params.shortURL, 
-      longURL: urlDatabase[req.params.shortURL]['longURL'],
-      id: urlDatabase[req.params.shortURL]['userID'],
-      user: users[req.session.user_id]
+      shortURL: req.params.id, 
+      longURL: urlDatabase[req.params.id]['longURL'],
+      id: urlDatabase[req.params.id]['userID'],
+      user: users[req.session.user_id],
+      error:""
+    };
+   
+    res.render("urls_show", templateVars);
+  } else {
+    let templateVars = {
+     error: "URL ID does not exist",
+     user: users[req.session.user_id]
     };
 
     res.render("urls_show", templateVars);
-  } else {
     //return error message here
     //maybe initialize template vars with an error message instead & check for errors
   }
@@ -107,17 +124,16 @@ app.get("/urls/:id", (req, res) => {
   Render the login page.
 */ 
 app.get("/login", (req, res) => {
+  
   const loggedUser = users[req.session.user_id];
-
-  if(user){
-    res.redirect("/login");
+  if(loggedUser){
+    res.redirect("/urls");
   } else {
     let templateVars = {
       user: loggedUser
     };
     res.render("urls_login", templateVars);
   }
-  
 });
 
 
@@ -126,8 +142,8 @@ app.get("/login", (req, res) => {
 */ 
 app.get("/register", (req, res) => {
   const loggedUser = users[req.session.user_id];
-
-  if(user){
+  
+  if(loggedUser){
     res.redirect("/urls");
   } else {
     let templateVars = {
@@ -158,21 +174,34 @@ app.get("/urls", (req, res) => {
   Delete a URL  
 */ 
 app.post("/urls/:id/delete", (req, res) => {
-  const shortURL = req.params.shortURL;
-  console.log(shortURL, req.params);
-  console.log(urlDatabase);
-  delete urlDatabase[shortURL];
-  res.redirect('/urls');
-  //send a more userfriendly message here when it's deleted
+  const loggedUser = users[req.session.user_id];
+
+  if(loggedUser){
+    const shortURL = req.params.id;
+    console.log(shortURL, req.params);
+    console.log(urlDatabase);
+    delete urlDatabase[shortURL];
+    res.redirect('/urls');
+    //send a more userfriendly message here when it's deleted
+  } else {
+    res.redirect("/login");
+  }
 });
 
 /*
   Showing a specific URL  
 */ 
 app.post("/urls/:id", (req, res) => {
-  const shortURL = req.params.id;
-  urlDatabase[shortURL]['longURL'] = req.body.longURL;
-  res.redirect('/urls');
+  const loggedUser = users[req.session.user_id];
+
+  if(loggedUser){
+    const shortURL = req.params.id;
+    urlDatabase[shortURL]['longURL'] = req.body.longURL;
+    res.redirect('/urls');
+  } else {
+    res.redirect("/login");
+  }
+
 });
 
 /*
@@ -209,6 +238,7 @@ app.post("/login", (req, res) => {
   Logout and clear the cookie session.
 */ 
 app.post("/logout", (req, res) => {
+  console.log("hello");
   req.session.user_id = null;
   res.redirect('/login');
 });
@@ -253,20 +283,26 @@ app.post("/register", (req, res) => {
   Show all the URLS that the specific user has created.
 */ 
 app.post("/urls", (req, res) => {
-  //generate string;
-  let shortURL = generateRandomString();
+  const loggedUser = users[req.session.user_id];
+
+  if(loggedUser){
+    //generate string;
+    let shortURL = generateRandomString();
   //add to object
   //maybe do checks here later
-  urlDatabase[shortURL] = {
-    'longURL': req.body.longURL,
-    'userID': users[req.session.user_id]['id']
-  };
+    urlDatabase[shortURL] = {
+      'longURL': req.body.longURL,
+      'userID': users[req.session.user_id]['id']
+    };
 
   // console.log(urlDatabase);
   //redirect
   //check if the url has value
-  res.redirect('/urls/' + shortURL);  
- 
+    res.redirect('/urls/' + shortURL);  
+  } else {
+    res.redirect("/login");
+  }
+  
 });
 
 

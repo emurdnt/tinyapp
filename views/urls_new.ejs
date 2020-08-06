@@ -13,15 +13,11 @@
    
     <%- include('partials/_header') %>
     <main style="margin: 1em;">
-    <!-- <% if (!user) { %>
-      <div class="card text-center" style="width:70%; margin:170px auto;">
-        <div class="card-header">Error</div>
-        <div class="card-body">
-          <h3><a href="/register">Register</a> or <a href="/login">Login</a> first.</h3>
-          </form>
-        </div>
+    <% if (error) { %>
+      <div class="alert alert-warning" role="alert">
+        <p><%= error %></p>
       </div>
-      <%  } else { %> -->
+      <%  } else { %>
       
           <h3>Create TinyURL</h3>
           <form class="form-inline" action="/urls" method="POST">
@@ -32,7 +28,7 @@
             </div>
           </form>
         
-        <!-- <% } %> -->
+        <% } %>
       </main>
       <!-- Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
