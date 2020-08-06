@@ -57,43 +57,67 @@ app.get("/urls.json", (req, res) => {
 /*
   Redirect the short URL to the longURL
 */ 
-app.get("/u/:shortURL", (req, res) => {
-  res.redirect(urlDatabase[req.params.shortURL]['longURL']);  
+app.get("/u/:id", (req, res) => {
+  if(urlDatabase[req.params.shortURL]['longURL']){
+    res.redirect(urlDatabase[req.params.shortURL]['longURL']);  
+  } else {
+    //return error message here
+  }
 });
 
 /*
   Render the New Urls Page but prevent the user that are not logged in.
 */ 
 app.get("/urls/new", (req, res) => {
-  let templateVars = {
-    user: users[req.session.user_id]
-  };
-  console.log(templateVars);
-  res.render("urls_new",templateVars);
+  const loggedUser = users[req.session.user_id];
+
+  if(user){
+    let templateVars = {
+      user: loggedUser
+    };
+    //console.log(templateVars);
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login");
+  }
+  
 });
 
 /*
   Render the short url page but prevent the user that are not logged in and does not own the url.
 */ 
-app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = {
-    shortURL: req.params.shortURL, 
-    longURL: urlDatabase[req.params.shortURL]['longURL'],
-    id: urlDatabase[req.params.shortURL]['userID'],
-    user: users[req.session.user_id]
-  };
-  console.log(urlDatabase, templateVars);
-  res.render("urls_show", templateVars);
+app.get("/urls/:id", (req, res) => {
+
+  if(urlDatabase[req.params.shortURL]['longURL']){
+    let templateVars = {
+      shortURL: req.params.shortURL, 
+      longURL: urlDatabase[req.params.shortURL]['longURL'],
+      id: urlDatabase[req.params.shortURL]['userID'],
+      user: users[req.session.user_id]
+    };
+
+    res.render("urls_show", templateVars);
+  } else {
+    //return error message here
+    //maybe initialize template vars with an error message instead & check for errors
+  }
 });
 
 /*
   Render the login page.
 */ 
 app.get("/login", (req, res) => {
-  let templateVars = {
-    user: users[req.session.user_id]
-  };
-  res.render("urls_login", templateVars);
+  const loggedUser = users[req.session.user_id];
+
+  if(user){
+    res.redirect("/login");
+  } else {
+    let templateVars = {
+      user: loggedUser
+    };
+    res.render("urls_login", templateVars);
+  }
+  
 });
 
 
@@ -101,10 +125,17 @@ app.get("/login", (req, res) => {
   Render the register page.
 */ 
 app.get("/register", (req, res) => {
-  let templateVars = {
-    user: users[req.session.user_id]
-  };
-  res.render("urls_register", templateVars);
+  const loggedUser = users[req.session.user_id];
+
+  if(user){
+    res.redirect("/urls");
+  } else {
+    let templateVars = {
+      user: loggedUser
+    };
+    res.render("urls_register", templateVars);
+  }
+  
 });
 
 /*
@@ -126,7 +157,7 @@ app.get("/urls", (req, res) => {
 /*
   Delete a URL  
 */ 
-app.post("/urls/:shortURL/delete", (req, res) => {
+app.post("/urls/:id/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   console.log(shortURL, req.params);
   console.log(urlDatabase);
