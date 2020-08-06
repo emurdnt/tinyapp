@@ -4,10 +4,10 @@ const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 
-const{
+const {
   generateRandomString,
   urlsForUser,
-  findUserID,
+  getUserByEmail,
   doesUserEmailExist,
   doesPasswordMatch,
   generateUserId
@@ -21,29 +21,30 @@ const urlDatabase = {
 };
 
 
-const users = { 
+const users = {
   "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
+    id: "userRandomID",
+    email: "user@example.com",
     //date: "31/10/2019",
     password: "purple-monkey-dinosaur"
   },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
     //date: "31/10/2019",
     password: "test"
   }
-}
+};
 
 //app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
+
 app.use(cookieSession({
   name: 'session',
   keys: ['key1', "key2"]
 }));
 
-app.set("view engine", "ejs") ;
+app.set("view engine", "ejs");
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -98,15 +99,14 @@ app.get("/register", (req, res) => {
 //show all the urls
 app.get("/urls", (req, res) => {
   //check if they're logged in here or redirect to 
-  
   let shortenedLinks = urlsForUser(req.session.user_id,urlDatabase);
   // console.log(users);
-  let templateVars = { 
+  let templateVars = {
     urls: shortenedLinks,
     user: users[req.session.user_id]
-   };
+  };
 
-   console.log(templateVars);
+  console.log(templateVars);
   res.render("urls_index", templateVars);
 });
 
@@ -131,23 +131,24 @@ app.post("/login", (req, res) => {
   //var value = res.body.username;
   //grab the vaalue in the input
   //assign it to a cookie
+  //check session cookies
   const email = req.body.email;
-  let userFound = doesUserEmailExist(email,users);
-  let passMatch = doesPasswordMatch(req.body.password,users);
+  let userFound = doesUserEmailExist(email, users);
+  let passMatch = doesPasswordMatch(req.body.password, users);
 
-  if(!userFound){
+  if (!userFound) {
     console.log("User not found");
     res.status(403);
     res.redirect('/login');
-  } else if (userFound){
+  } else if (userFound) {
     console.log("User email found");
-    if(passMatch){
+    if (passMatch) {
       console.log("success!");
-      req.session.user_id = findUserID(email,users);
-      res.redirect('/urls');  
+      req.session.user_id = getUserByEmail(email,users);
+      res.redirect('/urls');
     } else {
       console.log("pass not match");
-      res.redirect('/login');  
+      res.redirect('/login');
     }
   }
 
@@ -161,17 +162,17 @@ app.post("/logout", (req, res) => {
 app.post("/register", (req, res) => {
   //check if it exists
   //check is email and password exists
-  let userExists = doesUserEmailExist(req.body.email,users);
-  if(req.body.email === '' || req.body.password === ''){
+  let userExists = doesUserEmailExist(req.body.email, users);
+  if (req.body.email === '' || req.body.password === '') {
     //add message in the front end
     res.status(404);
     res.redirect('/register');
-  }else if(userExists){
+  } else if (userExists) {
     res.status(404);
     //maybe redirect to login and then show message
     res.redirect('/register');
   } else {
-    if(!userExists){
+    if (!userExists) {
       console.log("adding to server a user");
       const newUserId = generateUserId(users);
 
@@ -183,12 +184,11 @@ app.post("/register", (req, res) => {
         'id': newUserId,
         'email': req.body.email,
         'password': hashedPassword
-      }
+      };
       req.session.user_id = newUserId;
       res.redirect('/urls/');
     }
   }
-  
 });
 
 app.post("/urls", (req, res) => {
@@ -196,10 +196,10 @@ app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   //add to object
   //maybe do checks here later
-  urlDatabase[shortURL] ={
+  urlDatabase[shortURL] = {
     'longURL':req.body.longURL,
-    'userID': users[req.session.user_id]['id']
-  } 
+    'userID':users[req.session.user_id]['id']
+  };
 
   // console.log(urlDatabase);
   //redirect
