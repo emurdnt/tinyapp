@@ -1,7 +1,7 @@
 const express = require("express");
 const bcrypt = require('bcrypt');
 const app = express();
-const PORT = 8080; // default port 8080
+const PORT = 8080; 
 const bodyParser = require("body-parser");
 
 const {
@@ -53,12 +53,17 @@ app.get("/", (req, res) => {
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
-//redirect the shortened url to the long url
+
+/*
+  Redirect the short URL to the longURL
+*/ 
 app.get("/u/:shortURL", (req, res) => {
   res.redirect(urlDatabase[req.params.shortURL]['longURL']);  
 });
 
-//new urls
+/*
+  Render the New Urls Page but prevent the user that are not logged in.
+*/ 
 app.get("/urls/new", (req, res) => {
   let templateVars = {
     user: users[req.session.user_id]
@@ -67,19 +72,23 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new",templateVars);
 });
 
-//shortened url
+/*
+  Render the short url page but prevent the user that are not logged in and does not own the url.
+*/ 
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL, 
-    longURL:urlDatabase[req.params.shortURL]['longURL'],
-    id:urlDatabase[req.params.shortURL]['userID'],
+    longURL: urlDatabase[req.params.shortURL]['longURL'],
+    id: urlDatabase[req.params.shortURL]['userID'],
     user: users[req.session.user_id]
   };
   console.log(urlDatabase, templateVars);
   res.render("urls_show", templateVars);
 });
 
-//login
+/*
+  Render the login page.
+*/ 
 app.get("/login", (req, res) => {
   let templateVars = {
     user: users[req.session.user_id]
@@ -88,7 +97,9 @@ app.get("/login", (req, res) => {
 });
 
 
-//resgister
+/*
+  Render the register page.
+*/ 
 app.get("/register", (req, res) => {
   let templateVars = {
     user: users[req.session.user_id]
@@ -96,7 +107,9 @@ app.get("/register", (req, res) => {
   res.render("urls_register", templateVars);
 });
 
-//show all the urls
+/*
+  Render the page that shows all the URLs.
+*/ 
 app.get("/urls", (req, res) => {
   //check if they're logged in here or redirect to 
   let shortenedLinks = urlsForUser(req.session.user_id,urlDatabase);
@@ -110,6 +123,9 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+/*
+  Delete a URL  
+*/ 
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   console.log(shortURL, req.params);
@@ -119,22 +135,26 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   //send a more userfriendly message here when it's deleted
 });
 
-
+/*
+  Showing a specific URL  
+*/ 
 app.post("/urls/:id", (req, res) => {
   const shortURL = req.params.id;
   urlDatabase[shortURL]['longURL'] = req.body.longURL;
   res.redirect('/urls');
 });
 
-
+/*
+  Login
+*/ 
 app.post("/login", (req, res) => {
   //var value = res.body.username;
   //grab the vaalue in the input
   //assign it to a cookie
   //check session cookies
-  const email = req.body.email;
+  const {email, password} = req.body;
   let userFound = doesUserEmailExist(email, users);
-  let passMatch = doesPasswordMatch(req.body.password, users);
+  let passMatch = doesPasswordMatch(password, users);
 
   if (!userFound) {
     console.log("User not found");
@@ -144,7 +164,7 @@ app.post("/login", (req, res) => {
     console.log("User email found");
     if (passMatch) {
       console.log("success!");
-      req.session.user_id = getUserByEmail(email,users);
+      req.session.user_id = getUserByEmail(email, users);
       res.redirect('/urls');
     } else {
       console.log("pass not match");
@@ -154,16 +174,23 @@ app.post("/login", (req, res) => {
 
 });
 
+/*
+  Logout and clear the cookie session.
+*/ 
 app.post("/logout", (req, res) => {
   req.session.user_id = null;
   res.redirect('/login');
 });
 
+/*
+  Registering a new user.
+*/ 
 app.post("/register", (req, res) => {
   //check if it exists
   //check is email and password exists
+  const {email, password} = req.body;
   let userExists = doesUserEmailExist(req.body.email, users);
-  if (req.body.email === '' || req.body.password === '') {
+  if (email === '' || password === '') {
     //add message in the front end
     res.status(404);
     res.redirect('/register');
@@ -176,13 +203,13 @@ app.post("/register", (req, res) => {
       console.log("adding to server a user");
       const newUserId = generateUserId(users);
 
-      const password = req.body.password;
-      const hashedPassword = bcrypt.hashSync(password, 10);
+      const inputPassword = password;
+      const hashedPassword = bcrypt.hashSync(inputPassword, 10);
       //hash the password
       //encrypt the email and user id
       users[newUserId] = {
         'id': newUserId,
-        'email': req.body.email,
+        'email': email,
         'password': hashedPassword
       };
       req.session.user_id = newUserId;
@@ -191,14 +218,17 @@ app.post("/register", (req, res) => {
   }
 });
 
+/*
+  Show all the URLS that the specific user has created.
+*/ 
 app.post("/urls", (req, res) => {
   //generate string;
   let shortURL = generateRandomString();
   //add to object
   //maybe do checks here later
   urlDatabase[shortURL] = {
-    'longURL':req.body.longURL,
-    'userID':users[req.session.user_id]['id']
+    'longURL': req.body.longURL,
+    'userID': users[req.session.user_id]['id']
   };
 
   // console.log(urlDatabase);
