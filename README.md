@@ -3,11 +3,11 @@
 TinyApp is a full stack web application built with Node and Express that allows users to shorten long URLs (à la bit.ly).
 
 ## Final Product
-!["screenshot description"](https://raw.githubusercontent.com/emurdnt/tinyapp/master/docs/urls-page.png)
-!["screenshot description"](https://raw.githubusercontent.com/emurdnt/tinyapp/master/docs/url-new.png)
-!["screenshot description"](https://github.com/emurdnt/tinyapp/blob/master/docs/url-not-logged-in.png)
-!["screenshot description"](https://raw.githubusercontent.com/emurdnt/tinyapp/master/docs/url-error-not-exist.png)
-!["screenshot description"](https://raw.githubusercontent.com/emurdnt/tinyapp/master/docs/url-error-unauthorized.png)
+!["All the URLs that the user has shortened"](https://raw.githubusercontent.com/emurdnt/tinyapp/master/docs/urls-page.png)
+!["Shortening a new URL"](https://raw.githubusercontent.com/emurdnt/tinyapp/master/docs/url-new.png)
+!["Prompt for someone trying to use the app without logging in"](https://github.com/emurdnt/tinyapp/blob/master/docs/url-not-logged-in.png)
+!["Error for when the url being accessed does not exist."](https://raw.githubusercontent.com/emurdnt/tinyapp/master/docs/url-error-not-exist.png)
+!["Prompt for someone trying to use the app without logging in"](https://raw.githubusercontent.com/emurdnt/tinyapp/master/docs/url-error-unauthorized.png)
 
 
 
