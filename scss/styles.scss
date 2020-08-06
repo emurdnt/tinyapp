@@ -1,9 +1,14 @@
-// $base-color: #c6538c;
+$base-color: #c6538c;
 
-// header{
-//   .nav-bar{
-//     a.navbar-brand {
-//       color:$base-color;
-//     }
-//   }
-// }
+header{
+  .navbar{
+    .navbar-brand {
+      color:green;
+    }
+    .navbar-text{
+      .user{
+        color:green;
+      }
+    }
+  }
+}

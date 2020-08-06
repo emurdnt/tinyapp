@@ -14,7 +14,7 @@
         <a class="nav-item nav-link" href="/register">Register</a>
         <a class="nav-item nav-link" href="/login">Login</a>
       <%  } else { %>
-        <p class="nav navbar-text" style = "margin-right: 10px;">Hi, <%= user["email"] %>!</p>
+        <p class="nav navbar-text" style = "margin-right: 10px;">Hi, <span class="user"><%= user["email"] %></span>!</p>
         <form class="form-inline my-2 my-lg-0" method= "POST" action="/logout">
           <button class="btn btn-outline-success my-2 my-sm-0" type="submit">logout</button>
         </form>
