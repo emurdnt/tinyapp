@@ -1,12 +1,19 @@
 const express = require("express");
-const app = express();
 const bcrypt = require('bcrypt');
+const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
-//const cookieParser = require('cookie-parser');
-const cookieSession = require('cookie-session');
-//const { response } = require("express");
 
+const{
+  generateRandomString,
+  urlsForUser,
+  findUserID,
+  doesUserEmailExist,
+  doesPasswordMatch,
+  generateUserId
+} = require('./helpers');
+
+const cookieSession = require('cookie-session');
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
@@ -29,80 +36,12 @@ const users = {
   }
 }
 
-
 //app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
   name: 'session',
   keys: ['key1', "key2"]
 }));
-
-
-function generateRandomString() {
-  let result = '';
-  let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  for ( var i = 1; i <= 6; i++ ) {
-     result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
-
-function urlsForUser(id){
-  let urls = [];
-  let details = {};
-  for(let entry in urlDatabase){
-    let urlDetails = urlDatabase[entry];
-    if(urlDetails['userID'] === id){
-      details = {
-        'shortURL': entry,
-        'longURL': urlDetails['longURL']
-      }
-      urls.push(details);
-    }
-  }
-  return urls;
-}
-
-
-function findUserID(email){
-  let userId = "";
-  for(let user in users){
-    let userDetails = users[user];
-    if(userDetails['email'] === email){
-       userId = userDetails['id'];
-    }
-  }
-  return userId;
-}
-function doesUserEmailExist(email){
-  let userExists = false;
-  for(let user in users){
-    let userDetails = users[user];
-    if(userDetails['email'] === email){
-      userExists = true; 
-    }
-  }
-  return userExists;
-}
-
-function doesPasswordMatch(password){
-  let match = false;
-  for(let user in users){
-    let userDetails = users[user];
-    if(bcrypt.compareSync(password, userDetails['password'])){
-      match = true; 
-    }
-  }
-  return match;
-}
-function generateUserId(){
-  //got this from stackOverflow
-  //https://stackoverflow.com/questions/4317456/getting-the-last-item-in-a-javascript-object
-  const lastUser = users[Object.keys(users)[Object.keys(users).length - 1]]['id'];
-  const num = Number(lastUser.substr(4,1)) + 1; 
-
- return 'user'+num+'RandomID';
-}
 
 app.set("view engine", "ejs") ;
 
@@ -160,7 +99,7 @@ app.get("/register", (req, res) => {
 app.get("/urls", (req, res) => {
   //check if they're logged in here or redirect to 
   
-  let shortenedLinks = urlsForUser(req.session.user_id);
+  let shortenedLinks = urlsForUser(req.session.user_id,urlDatabase);
   // console.log(users);
   let templateVars = { 
     urls: shortenedLinks,
@@ -193,8 +132,8 @@ app.post("/login", (req, res) => {
   //grab the vaalue in the input
   //assign it to a cookie
   const email = req.body.email;
-  let userFound = doesUserEmailExist(email);
-  let passMatch = doesPasswordMatch(req.body.password);
+  let userFound = doesUserEmailExist(email,users);
+  let passMatch = doesPasswordMatch(req.body.password,users);
 
   if(!userFound){
     console.log("User not found");
@@ -204,7 +143,7 @@ app.post("/login", (req, res) => {
     console.log("User email found");
     if(passMatch){
       console.log("success!");
-      req.session.user_id = findUserID(email);
+      req.session.user_id = findUserID(email,users);
       res.redirect('/urls');  
     } else {
       console.log("pass not match");
@@ -222,7 +161,7 @@ app.post("/logout", (req, res) => {
 app.post("/register", (req, res) => {
   //check if it exists
   //check is email and password exists
-  let userExists = doesUserEmailExist(req.body.email);
+  let userExists = doesUserEmailExist(req.body.email,users);
   if(req.body.email === '' || req.body.password === ''){
     //add message in the front end
     res.status(404);
@@ -234,7 +173,7 @@ app.post("/register", (req, res) => {
   } else {
     if(!userExists){
       console.log("adding to server a user");
-      const newUserId = generateUserId();
+      const newUserId = generateUserId(users);
 
       const password = req.body.password;
       const hashedPassword = bcrypt.hashSync(password, 10);
