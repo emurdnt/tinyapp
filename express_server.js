@@ -1,5 +1,6 @@
 const express = require("express");
 const bcrypt = require('bcrypt');
+const methodOverride = require('method-override'); 
 const app = express();
 const PORT = 8080; 
 const bodyParser = require("body-parser");
@@ -10,14 +11,17 @@ const {
   getUserByEmail,
   doesUserEmailExist,
   doesPasswordMatch,
+  getCurrentDate,
   generateUserId
 } = require('./helpers');
 
 const cookieSession = require('cookie-session');
 
+app.use(methodOverride('_method'));
+
 const urlDatabase = {
-  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
-  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW", date: "31/10/2019", },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW", date: "31/10/2019" }
 };
 
 
@@ -25,13 +29,12 @@ const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    //date: "31/10/2019",
+   
     password: "purple-monkey-dinosaur"
   },
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    //date: "31/10/2019",
     password: "test"
   }
 };
@@ -151,7 +154,7 @@ app.get("/urls", (req, res) => {
   let shortenedLinks = urlsForUser(req.session.user_id,urlDatabase);
   let templateVars = {
     urls: shortenedLinks,
-    user: users[req.session.user_id]
+    user: users[req.session.user_id],
   };
   res.render("urls_index", templateVars);
 });
@@ -159,7 +162,7 @@ app.get("/urls", (req, res) => {
 /*
   Delete a URL  
 */ 
-app.post("/urls/:id/delete", (req, res) => {
+app.delete("/urls/:id/delete", (req, res) => {
   const loggedUser = users[req.session.user_id];
 
   if(loggedUser){
@@ -191,7 +194,7 @@ app.post("/urls/:id", (req, res) => {
 /*
   Login
 */ 
-app.post("/login", (req, res) => {
+app.put("/login", (req, res) => {
   const {email, password} = req.body;
   let userFound = doesUserEmailExist(email, users);
   let passMatch = doesPasswordMatch(password, users);
@@ -258,7 +261,8 @@ app.post("/urls", (req, res) => {
     let shortURL = generateRandomString();
     urlDatabase[shortURL] = {
       'longURL': req.body.longURL,
-      'userID': users[req.session.user_id]['id']
+      'userID': users[req.session.user_id]['id'],
+      'date': getCurrentDate()
     };
     res.redirect('/urls/' + shortURL);  
   } else {
