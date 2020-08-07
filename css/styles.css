@@ -1,9 +1,8 @@
-header .navbar .navbar-brand {
+html body header .navbar .navbar-brand {
   color: green; }
 
-header .navbar .navbar-text .user {
+html body header .navbar .navbar-text .user {
   color: green; }
 
-body{
-  background: #000;
-}
+html body .centered-card {
+  align-items: center; }
