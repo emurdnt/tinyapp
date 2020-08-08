@@ -1,19 +1,6 @@
 const bcrypt = require('bcrypt');
 
 /*
-Function to generate an alpha-numeric ID for the shortened URLS.
-Returns a string.
-*/
-const generateRandomString = () => {
-  let result = '';
-  let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  for (let i = 1; i <= 6; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-};
-
-/*
 Function to generate User IDs.
 Takes in the the users objects.
 Maintains the pattern userNRandomID where N is the number that increments.
@@ -98,23 +85,8 @@ const doesPasswordMatch = (password, database) => {
   return match;
 };
 
-/*
-Get the current date for when the link is created in the format mm/dd/yyyy.
-https://stackoverflow.com/questions/1531093/how-do-i-get-the-current-date-in-javascript
-*/
-const getCurrentDate = () =>{
-  let today = new Date();
-  let dd = String(today.getDate()).padStart(2, '0');
-  let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-  let yyyy = today.getFullYear();
-
-  return today = mm + '/' + dd + '/' + yyyy;
-}
-
 
 module.exports = {
-  getCurrentDate,
-  generateRandomString,
   urlsForUser,
   getUserByEmail,
   doesUserEmailExist,
