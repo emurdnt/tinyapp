@@ -1,17 +1,17 @@
 const express = require("express");
 const bcrypt = require('bcrypt');
+const moment = require('moment');
+var randomstring = require("randomstring");
 const methodOverride = require('method-override'); 
 const app = express();
 const PORT = 8080; 
 const bodyParser = require("body-parser");
 
 const {
-  generateRandomString,
   urlsForUser,
   getUserByEmail,
   doesUserEmailExist,
   doesPasswordMatch,
-  getCurrentDate,
   generateUserId
 } = require('./helpers');
 
@@ -25,7 +25,6 @@ const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW", date: "31/10/2019", },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW", date: "31/10/2019" }
 };
-
 
 const users = {
   "userRandomID": {
@@ -52,7 +51,16 @@ app.use(cookieSession({
 app.set("view engine", "ejs");
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  const loggedUser = users[req.session.user_id];
+  if(loggedUser){
+    let templateVars = {
+      user: loggedUser,
+      error:""
+    };
+    res.render("urls_show", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/urls.json", (req, res) => {
@@ -166,6 +174,7 @@ app.get("/urls", (req, res) => {
 */ 
 app.delete("/urls/:id/delete", (req, res) => {
   const loggedUser = users[req.session.user_id];
+  console.log(res.body);
 
   if(loggedUser){
     const shortURL = req.params.id;
@@ -202,14 +211,13 @@ app.put("/login", (req, res) => {
   let passMatch = doesPasswordMatch(password, users);
 
   if (!userFound) {
-    res.status(403);
-    res.redirect('/login');
+    res.status(403).send("<p>User does not exist</p>");
   } else if (userFound) {
     if (passMatch) {
       req.session.user_id = getUserByEmail(email, users);
       res.redirect('/urls');
     } else {
-      res.redirect('/login');
+      res.send("User does not exist");
     }
   }
 
@@ -230,11 +238,9 @@ app.post("/register", (req, res) => {
   const {email, password} = req.body;
   let userExists = doesUserEmailExist(req.body.email, users);
   if (email === '' || password === '') {
-    res.status(404);
-    res.redirect('/register');
+    res.status(404).send("Empty email or password field.");
   } else if (userExists) {
-    res.status(404);
-    res.redirect('/register');
+    res.status(404).send("User already exists.");
   } else {
     if (!userExists) {
       const newUserId = generateUserId(users);
@@ -260,11 +266,14 @@ app.post("/urls", (req, res) => {
   const loggedUser = users[req.session.user_id];
 
   if(loggedUser){
-    let shortURL = generateRandomString();
+    let shortURL = randomstring.generate({
+      length:6,
+      charset:'alphanumeric'
+    });
     urlDatabase[shortURL] = {
       'longURL': req.body.longURL,
       'userID': users[req.session.user_id]['id'],
-      'date': getCurrentDate()
+      'date': moment().format('DD/MM/YYYY')
     };
     res.redirect('/urls/' + shortURL);  
   } else {
